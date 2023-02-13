@@ -467,10 +467,30 @@ function toNaryString(num, n) {
  *   ['/web/assets/style.css', '/.bin/mocha',  '/read.me'] => '/'
  *   ['/web/favicon.ico', '/web-scripts/dump', '/verbalizer/logs'] => '/'
  */
-function getCommonDirectoryPath(/* pathes */) {
-  throw new Error('Not implemented');
+function checkMatches(firstPath, slashIndex, pathes) {
+  let str1 = firstPath;
+  let index1 = slashIndex;
+  for (let i = 1; i < pathes.length; i += 1) {
+    if (!pathes[i].includes(str1)) {
+      index1 = str1.lastIndexOf('/', index1 - 1);
+      str1 = str1.slice(0, index1 + 1);
+      if (str1 === '/') {
+        const firstChar = pathes.reduce((acc, cur) => acc && cur.startsWith('/'), true);
+        if (firstChar) { return '/'; }
+        return '';
+      }
+      return checkMatches(str1, index1, pathes);
+    }
+  }
+  return str1;
 }
 
+function getCommonDirectoryPath(pathes) {
+  const str = pathes[0];
+  const index = str.length;
+  const res = checkMatches(str, index, pathes);
+  return res;
+}
 
 /**
  * Returns the product of two specified matrixes.
@@ -490,8 +510,22 @@ function getCommonDirectoryPath(/* pathes */) {
  *                         [ 6 ]]
  *
  */
-function getMatrixProduct(/* m1, m2 */) {
-  throw new Error('Not implemented');
+function getMatrixProduct(m1, m2) {
+  // создание двумерного массива
+  // размерностью [m1.length х m1.length]
+  const res = Array.from(new Array(m1.length), () => []);
+  for (let i = 0; i < m1.length; i += 1) { // i - строки m1
+    for (let k = 0; k < m2[0].length; k += 1) { // k - столбцы m2
+      let el = 0;
+      for (let j = 0; j < m2.length; j += 1) { // j - строки m2
+        // вычисление элемента с индексом [i][k]
+        el += m1[i][j] * m2[j][k];
+      }
+      // запись в результ массив
+      res[i][k] = el;
+    }
+  }
+  return res;
 }
 
 
@@ -525,10 +559,65 @@ function getMatrixProduct(/* m1, m2 */) {
  *    [    ,   ,    ]]
  *
  */
-function evaluateTicTacToePosition(/* position */) {
-  throw new Error('Not implemented');
+
+function checkRows(position) {
+  const n = position.length;
+  let firstEl;
+  for (let i = 0; i < n; i += 1) {
+    [firstEl] = [position[i][0]];
+    for (let j = 1; j < n; j += 1) {
+      if (firstEl !== position[i][j]) {
+        break;
+      } else if (j === n - 1 && firstEl !== undefined) { // 2 - дошли до конца строки
+        return firstEl;
+      }
+    }
+  }
+  return undefined;
 }
 
+function checkDiagonals(positions) {
+  const n = positions.length;
+  let mainDiagonal = positions[0][0];
+  let secondaryDiagonal = positions[0][n - 1];
+  for (let i = 0; i < n; i += 1) {
+    for (let j = 0; j < n; j += 1) {
+      if (i === j) { // главная диагональ матрицы
+        if (mainDiagonal === positions[i][j]) {
+          mainDiagonal = positions[i][j];
+        } else {
+          mainDiagonal = undefined;
+        }
+      }
+      if (n - 1 === j + i) { // побочная диагональ матрицы
+        if (secondaryDiagonal === positions[i][j]) {
+          secondaryDiagonal = positions[i][j];
+        } else {
+          secondaryDiagonal = undefined;
+        }
+      }
+    }
+  }
+  return (mainDiagonal || secondaryDiagonal || undefined);
+}
+
+function transposePosition(position) {
+  const trPos = position;
+  for (let i = 0; i < position.length; i += 1) {
+    for (let j = 0; j < i; j += 1) {
+      [trPos[i][j], trPos[j][i]] = [trPos[j][i], trPos[i][j]];
+    }
+  }
+  return trPos;
+}
+
+
+function evaluateTicTacToePosition(position) {
+  const rowResult = checkRows(position);
+  const colResult = checkRows(transposePosition(position));
+  const diagonalsResult = checkDiagonals(position);
+  return rowResult || colResult || diagonalsResult || undefined;
+}
 
 module.exports = {
   getFizzBuzz,
