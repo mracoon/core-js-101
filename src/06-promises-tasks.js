@@ -28,8 +28,15 @@
  *      .catch((error) => console.log(error.message)) // 'Error: Wrong parameter is passed!
  *                                                    //  Ask her again.';
  */
-function willYouMarryMe(/* isPositiveAnswer */) {
-  throw new Error('Not implemented');
+function willYouMarryMe(isPositiveAnswer) {
+  return new Promise((resolve, reject) => {
+    if (isPositiveAnswer === undefined) {
+      reject(new Error('Wrong parameter is passed! Ask her again.'));
+    } else if (isPositiveAnswer) {
+      resolve('Hooray!!! She said "Yes"!');
+    }
+    resolve('Oh no, she said "No".');
+  });
 }
 
 
@@ -48,8 +55,8 @@ function willYouMarryMe(/* isPositiveAnswer */) {
  *    })
  *
  */
-function processAllPromises(/* array */) {
-  throw new Error('Not implemented');
+function processAllPromises(array) {
+  return Promise.all(array);
 }
 
 /**
@@ -71,8 +78,8 @@ function processAllPromises(/* array */) {
  *    })
  *
  */
-function getFastestPromise(/* array */) {
-  throw new Error('Not implemented');
+function getFastestPromise(array) {
+  return Promise.race(array);
 }
 
 /**
@@ -92,9 +99,45 @@ function getFastestPromise(/* array */) {
  *    });
  *
  */
-function chainPromises(/* array, action */) {
-  throw new Error('Not implemented');
+
+/*
+function chainPromises(array, action) {
+  return Promise.allSettled(array).then((el) => el.map((res) => res.value).reduce(action));
 }
+*/
+/*
+async function f(array, action) {
+  const res = [];
+  for (let i = 0; i < array.length; i += 1) {
+    try {
+      const val = await array[i];
+      res.push(val);
+    }
+    catch (e) {
+      console.log(e);
+    }
+  }
+  return res.reduce(action);
+}
+
+function chainPromises(array, action) {
+  return f(array, action);
+}
+*/
+
+function chainPromises(array, action) {
+  const promResults = [];
+  const allPr = new Promise((resolve) => {
+    for (let i = 0; i < array.length; i += 1) {
+      array[i].then((val) => {
+        promResults.push(val);
+      }, () => { });
+    }
+    resolve(promResults);
+  });
+  return allPr.then((val) => val.reduce(action), () => { });
+}
+
 
 module.exports = {
   willYouMarryMe,
