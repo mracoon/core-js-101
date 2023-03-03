@@ -118,33 +118,150 @@ function fromJSON(proto, obj) {
  *  For more examples see unit tests.
  */
 
+/*
 const cssSelectorBuilder = {
-  element(/* value */) {
+  element( value ) {
     throw new Error('Not implemented');
   },
 
-  id(/* value */) {
+  id(/* value ) {
     throw new Error('Not implemented');
   },
 
-  class(/* value */) {
+  class(/* value ) {
     throw new Error('Not implemented');
   },
 
-  attr(/* value */) {
+  attr(/* value ) {
     throw new Error('Not implemented');
   },
 
-  pseudoClass(/* value */) {
+  pseudoClass(/* value ) {
     throw new Error('Not implemented');
   },
 
-  pseudoElement(/* value */) {
+  pseudoElement(/* value ) {
     throw new Error('Not implemented');
   },
 
-  combine(/* selector1, combinator, selector2 */) {
+  combine(/* selector1, combinator, selector2 ) {
     throw new Error('Not implemented');
+  },
+};
+*/
+
+class MySelector {
+  constructor() {
+    this.order = 0;
+    this.ELEMENT = undefined;
+    this.ID = undefined;
+    this.CLASSES = [];
+    this.ATTRS = [];
+    this.PSEUDOCLASSES = [];
+    this.PSEUDOELEMENT = undefined;
+    this.combined = '';
+  }
+
+  checkOrder(order) {
+    if (this.order > order) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    this.order = order;
+  }
+
+  element(val) {
+    this.checkOrder(1);
+    if (this.ELEMENT) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
+    this.ELEMENT = val;
+    return this;
+  }
+
+  id(val) {
+    this.checkOrder(2);
+    if (this.ID) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
+    this.ID = `#${val}`;
+    return this;
+  }
+
+  class(val) {
+    this.checkOrder(3);
+    this.CLASSES.push(`.${val}`);
+    return this;
+  }
+
+  attr(val) {
+    this.checkOrder(4);
+    const atttribute = `[${val}]`;
+    this.ATTRS.push(atttribute);
+    return this;
+  }
+
+  pseudoClass(val) {
+    this.checkOrder(5);
+    this.PSEUDOCLASSES.push(`:${val}`);
+    return this;
+  }
+
+  pseudoElement(val) {
+    this.checkOrder(6);
+    if (this.PSEUDOELEMENT) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
+    this.PSEUDOELEMENT = `::${val}`;
+    return this;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.combined = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    return this;
+  }
+
+  stringify() {
+    const element = this.ELEMENT ? this.ELEMENT : '';
+    const id = this.ID ? this.ID : '';
+    const classes = this.CLASSES.length ? this.CLASSES.join('') : '';
+    const attrs = this.ATTRS.length ? (this.ATTRS.join('')) : '';
+    const pseudoClasses = this.PSEUDOCLASSES.length ? this.PSEUDOCLASSES.join('') : '';
+    const pseudoElement = this.PSEUDOELEMENT ? this.PSEUDOELEMENT : '';
+    return element + id + classes + attrs + pseudoClasses + pseudoElement + this.combined;
+  }
+}
+
+const cssSelectorBuilder = {
+  element(value) {
+    // вызывает методы из cssSelectorBuilder только в первый раз,
+    // когда создает builder = cssSelectorBuilder
+    // и вызывает первый метод builder.
+    // далее работает толко с MySelector. поэтому надо одиноково называть методы
+    return new MySelector().element(value);
+  },
+
+  id(value) {
+    return new MySelector().id(value);
+  },
+
+  class(value) {
+    return new MySelector().class(value);
+  },
+
+  attr(value) {
+    return new MySelector().attr(value);
+  },
+
+  pseudoClass(value) {
+    return new MySelector().pseudoClass(value);
+  },
+
+  pseudoElement(value) {
+    return new MySelector().pseudoElement(value);
+  },
+
+  combine(selector1, combinator, selector2) {
+    return new MySelector().combine(selector1, combinator, selector2);
   },
 };
 
